@@ -23,31 +23,42 @@ Adafruit_NeoTrellisM4::Adafruit_NeoTrellisM4(void) :
   _num_keys = ROWS * COLS;
   _rows = ROWS;
   _cols = COLS;
+  _midi_usb = false;
   _midi_channel_usb = 0;
-  _midi_channel_usb = 0;
+  _midi_uart = false;
+  _midi_channel_uart = 0;
   _pending_midi = false;
+  _auto_update = true;
 }
 
 void Adafruit_NeoTrellisM4::begin(void) {
   Adafruit_Keypad::begin();
 
   // Initialize all pixels to 'off'
-  Adafruit_NeoPixel::begin();
+  Adafruit_NeoPixel_ZeroDMA::begin();
   fill(0x0);
-  Adafruit_NeoPixel::show();
-  Adafruit_NeoPixel::setBrightness(255);
+  Adafruit_NeoPixel_ZeroDMA::show();
+  Adafruit_NeoPixel_ZeroDMA::setBrightness(255);
 }
 
 void Adafruit_NeoTrellisM4::setPixelColor(uint32_t pixel, uint32_t color) {
-  Adafruit_NeoPixel::setPixelColor(pixel, color);
-  Adafruit_NeoPixel::show();
+  Adafruit_NeoPixel_ZeroDMA::setPixelColor(pixel, color);
+  if (_auto_update) {
+    Adafruit_NeoPixel_ZeroDMA::show();
+  }
+}
+
+void Adafruit_NeoTrellisM4::autoUpdateNeoPixels(boolean flag) {
+  _auto_update = flag;
 }
 
 void Adafruit_NeoTrellisM4::fill(uint32_t color) {
   for (int i=0; i<ROWS*COLS; i++) {
-    Adafruit_NeoPixel::setPixelColor(i, color);
+    Adafruit_NeoPixel_ZeroDMA::setPixelColor(i, color);
   }
-  Adafruit_NeoPixel::show();
+  if (_auto_update) {
+    Adafruit_NeoPixel_ZeroDMA::show();
+  }
 }
 
 void Adafruit_NeoTrellisM4::tick(void)
@@ -68,6 +79,19 @@ void Adafruit_NeoTrellisM4::tick(void)
 }
 
 
+void Adafruit_NeoTrellisM4::enableUSBMIDI(boolean flag) {
+  _midi_usb = flag;
+}
+
+void Adafruit_NeoTrellisM4::enableUARTMIDI(boolean flag) {
+  _midi_uart = flag;
+  if (_midi_uart) {
+    Serial1.begin(31250);
+  } else {
+    Serial1.end();
+  }
+}
+
 void Adafruit_NeoTrellisM4::setUSBMIDIchannel(uint8_t c) {
   _midi_channel_usb = min(15, c);  // channel can only be between 0-15;
 }
@@ -78,35 +102,71 @@ void Adafruit_NeoTrellisM4::setUARTMIDIchannel(uint8_t c) {
 
 
 void Adafruit_NeoTrellisM4::noteOn(byte pitch, byte velocity) {
-  midiEventPacket_t noteOn = {0x09, 0x90 | _midi_channel_usb, pitch, velocity};
-  MidiUSB.sendMIDI(noteOn);
-  _pending_midi = true;
+  pitch = min(pitch, 0x7F);
+  velocity = min(velocity, 0x7F);
+
+  if (_midi_usb) {
+    midiEventPacket_t noteOn = {0x09, 0x90 | _midi_channel_usb, pitch, velocity};
+    MidiUSB.sendMIDI(noteOn);
+    _pending_midi = true;
+  }
+  if (_midi_uart) {
+    Serial1.write(0x90 |  _midi_channel_uart);
+    Serial1.write(pitch);
+    Serial1.write(velocity);
+  }
 }
 
 void Adafruit_NeoTrellisM4::noteOff(byte pitch, byte velocity) {
-  midiEventPacket_t noteOff = {0x08, 0x80 | _midi_channel_usb, pitch, velocity};
-  MidiUSB.sendMIDI(noteOff);
-  _pending_midi = true;
+  pitch = min(pitch, 0x7F);
+  velocity = min(velocity, 0x7F);
+
+  if (_midi_usb) {
+    midiEventPacket_t noteOff = {0x08, 0x80 | _midi_channel_usb, pitch, velocity};
+    MidiUSB.sendMIDI(noteOff);
+    _pending_midi = true;
+  }
+  if (_midi_uart) {
+    Serial1.write(0x80 |  _midi_channel_uart);
+    Serial1.write(pitch);
+    Serial1.write(velocity);
+  }
 }
 
 void Adafruit_NeoTrellisM4::pitchBend(int value) {
   byte lowValue =  min(value & 0x7F, 127);
   byte highValue = min(value >> 7, 127);
-  midiEventPacket_t pitchBend = {0x0E, 0xE0 | _midi_channel_usb, lowValue, highValue};
-  MidiUSB.sendMIDI(pitchBend);
-  _pending_midi = true;
+
+  if (_midi_usb) {
+    midiEventPacket_t pitchBend = {0x0E, 0xE0 | _midi_channel_usb, lowValue, highValue};
+    MidiUSB.sendMIDI(pitchBend);
+    _pending_midi = true;
+  }
+  if (_midi_uart) {
+    Serial1.write(0xE0 |  _midi_channel_uart);
+    Serial1.write(lowValue);
+    Serial1.write(highValue);
+  }
 }
 
 void Adafruit_NeoTrellisM4::controlChange(byte control, byte value) {
-  value = min(0x7F, value);
   control = min(0x7F, control);
-  midiEventPacket_t event = {0x0B, 0xB0 | _midi_channel_usb, control, value};
-  MidiUSB.sendMIDI(event);
-  _pending_midi = true;
+  value = min(0x7F, value);
+
+  if (_midi_usb) {
+    midiEventPacket_t event = {0x0B, 0xB0 | _midi_channel_usb, control, value};
+    MidiUSB.sendMIDI(event);
+    _pending_midi = true;
+  }
+  if (_midi_uart) {
+    Serial1.write(0xB0 |  _midi_channel_uart);
+    Serial1.write(control);
+    Serial1.write(value);
+  }
 }
 
 void Adafruit_NeoTrellisM4::sendMIDI(void) {
-  if (_pending_midi) {
+  if (_midi_usb && _pending_midi) {
     MidiUSB.flush();
     _pending_midi = false;
   }
