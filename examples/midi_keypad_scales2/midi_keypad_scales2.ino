@@ -1,41 +1,54 @@
-/* Arpeggiator Synth for Adafruit Neotrellis M4
-    by Collin Cunningham for Adafruit Industries, inspired by Stretta's Polygome
-    https://www.adafruit.com/product/3938
+// Trellis M4 MIDI Keypad CC
+// inspired by the Arpeggiator Synth example by Collin Cunningham
+// sends 32 notes, pitch bend & a CC from accelerometer tilt over USB MIDI
 
-    Change color, scale, pattern, bpm, and waveform variables in settings.h file!
-
-*/
-
+#include <Adafruit_Sensor.h>
 #include <Adafruit_ADXL343.h>
 #include <Adafruit_NeoTrellisM4.h>
 
-#include "settings.h"
-
-//Pulse per quarter note. Each beat has 24 pulses.
-//Tempo is based on software inner BPM.
-int ppqn = 0;
-
+#define NULL_INDEX 255
 #define WIDTH      8
 #define HEIGHT     4
+#define N_BUTTONS  WIDTH*HEIGHT
 
-#define N_BUTTONS       WIDTH*HEIGHT
-#define ARP_NOTE_COUNT  6
-#define NULL_INDEX      255
+//misc//////////////////////////
+#define MIDI_CHANNEL     0  // default MIDI channel is 1
+#define MIDI_OUT      true  //enables MIDI output
+#define OCTAVE           2   //determines note pitch
+#define SYNTH_SCALE      dorian_scale    // see below, dorian, ionian, etc!
+#define MIDI_XCC         1 //choose a CC number to control with x axis tilting of the board. 1 is mod wheel, for example.
+
+// Musical modes / scales
+uint8_t dorian_scale[] = { 0, 2, 3, 5, 7, 9, 10, 12 }; //dorian
+uint8_t ionian_scale[] = { 0, 2, 4, 5, 7, 9, 11, 12 };  //ionian
+uint8_t phrygian_scale[] = { 0, 1, 2, 3, 5, 7,  8, 10,};  //phrygian
+uint8_t lydian_scale[] = { 0, 2, 4, 6, 7, 9, 10, 11 };  //lydian
+uint8_t mixolydian_scale[] = { 0, 2, 4, 5, 7, 9, 10, 12 }; //mixolydian
+uint8_t aeolian_scale[] = { 0, 2, 3, 5, 7, 8, 10, 12 }; //aeolian
+uint8_t locrian_scale[] = { 0, 1, 3, 5, 6, 8, 10, 12 }; //locrian
+
+//colors//////////////////////////
+uint32_t white =   0xFFFFFF;
+uint32_t red =     0xFF0000;
+uint32_t blue =    0x0000FF;
+uint32_t green =   0x00FF00;
+uint32_t teal =    0x00FFFF;
+uint32_t magenta = 0xFF00FF;
+uint32_t yellow =  0xFFFF00;
+uint32_t off =     0x000000;
+uint32_t offColor = yellow;   //color of deactivated buttons
+uint32_t onColor = red; //color of activated buttons
 
 unsigned long prevReadTime = 0L; // Keypad polling timer
 uint8_t       quantDiv = 8;      // Quantization division, 2 = half note
 uint8_t       clockPulse = 0;
 
-//#define QUANT_PULSE (96/quantDiv)// Number of pulses per quantization division  
+//#define QUANT_PULSE (96/quantDiv)// Number of pulses per quantization division
 
 boolean pressed[N_BUTTONS] = {false};        // Pressed state for each button
 uint8_t pitchMap[N_BUTTONS];
 uint8_t arpSeqIndex[N_BUTTONS] = {NULL_INDEX};   // Current place in button arpeggio sequence
 uint8_t arpButtonIndex[N_BUTTONS] = {NULL_INDEX};   // Button index being played for each actual pressed button
-
-//unsigned long beatInterval = 60000L / BPM; // ms/beat - should be merged w bpm in a function!
-unsigned long beatInterval = 0L;
-unsigned long prevArpTime  = 0L;
 
 int last_xbend = 0;
 int last_ybend = 0;
@@ -43,76 +56,49 @@ int last_ybend = 0;
 Adafruit_NeoTrellisM4 trellis = Adafruit_NeoTrellisM4();
 Adafruit_ADXL343 accel = Adafruit_ADXL343(123, &Wire1);
 
-void setup() {
+void setup(){
   Serial.begin(115200);
   //while (!Serial);
-  Serial.println("Arp Synth ...");
-
+  Serial.println("MIDI keypad & pitchbend!");
+    
   trellis.begin();
-  trellis.setBrightness(BRIGHTNESS);
+  trellis.setBrightness(32);
   if (MIDI_OUT) {
     trellis.enableUSBMIDI(true);
     trellis.setUSBMIDIchannel(MIDI_CHANNEL);
     trellis.enableUARTMIDI(true);
     trellis.setUARTMIDIchannel(MIDI_CHANNEL);
   }
-
+  
   //Set up the notes for grid
   writePitchMap();
 
-  audioSetup(); //comment out this line for serial debugging
-
   trellis.fill(offColor);
 
-  if (!accel.begin()) {
+  if(!accel.begin()) {
     Serial.println("No accelerometer found");
-    while (1);
+    while(1);
   }
 }
 
-
+  
 void loop() {
   trellis.tick();
 
   unsigned long t = millis();
   unsigned long tDiff = t - prevReadTime;
 
-  while (trellis.available()) {
+  while (trellis.available()){
     keypadEvent e = trellis.read();
     uint8_t i = e.bit.KEY;
     if (e.bit.EVENT == KEY_JUST_PRESSED) {
-      pressed[i] = true;
+      pressed[i] = true;     
     }
     else if (e.bit.EVENT == KEY_JUST_RELEASED) {
-      pressed[i] = false;
-      stopArp(i);
-    }
+        pressed[i] = false;
+        stopArp(i);
+      }
   }
-
-  //INTERNAL CLOCK
-//  if ((t - prevArpTime) >= beatInterval) {
-//    respondToPresses();
-//    prevArpTime = t;
-//  }
-
-  midiEventPacket_t rx;
-  
-  do {
-    rx = MidiUSB.read();
-
-    //Count pulses and send note 
-    if(rx.byte1 == 0xF8){
-       ++ppqn;
-       
-       if(ppqn == 12){
-          respondToPresses();
-          MidiUSB.flush();
-          ppqn = 0;
-          prevArpTime = t;
-       };
-    }
-    
-  } while (rx.header != 0);
 
   // Check for accelerometer
   sensors_event_t event;
@@ -124,7 +110,7 @@ void loop() {
   int xbend = 0;
   int ybend = 0;
   bool changed = false;
-
+  
   if (abs(event.acceleration.y) < 2.0) {  // 2.0 m/s^2
     // don't make any bend unless they've really started moving it
     ybend = 8192; // 8192 means no bend
@@ -165,17 +151,17 @@ void loop() {
   if (MIDI_OUT) {
     trellis.sendMIDI();
   }
-
+  
   prevReadTime = t;
 }
 
 
 void writePitchMap() {
   for (int i = 0; i < N_BUTTONS; i++) {
-    int octMod = i / 8 + OCTAVE;
-    pitchMap[i] = SYNTH_SCALE[i % 8] + (octMod * 12);
+    int octMod = i/8 + OCTAVE;
+    pitchMap[i] = SYNTH_SCALE[i%8] + (octMod*12);
   }
-
+  
 }
 
 void respondToPresses() {
@@ -194,10 +180,6 @@ void playArp(uint8_t buttonIndex) {
   if (arpSeqIndex[buttonIndex] == NULL_INDEX) seqIndex = 0;
   else seqIndex = arpSeqIndex[buttonIndex] + 1;
 
-  // Loop sequence
-  if (seqIndex >= ARP_NOTE_COUNT) {
-    seqIndex = 0;
-  }
 
   // Find current button coordinates
   y = buttonIndex / WIDTH;
@@ -228,14 +210,6 @@ void playArp(uint8_t buttonIndex) {
 }
 
 
-void stopArp(uint8_t button) {
-  //stop playing the note
-  stopNoteForButton(arpButtonIndex[button]);
-
-  //store an invalid button index in its place
-  arpSeqIndex[button] = NULL_INDEX;  //check for invalid
-
-}
 
 uint8_t indexFromXY(uint8_t x, uint8_t y) {
   return (y * WIDTH + x);
@@ -278,28 +252,28 @@ void stopNoteForButton(uint8_t buttonIndex) {
   trellis.setPixelColor(buttonIndex, offColor);
 }
 
-void debugLed(bool light) {
-  if (light)
-    trellis.setPixelColor(0, blue);
-  else
-    trellis.setPixelColor(0, 0);
+void debugLed(bool light){
+  if (light) 
+     trellis.setPixelColor(0, blue);
+  else 
+     trellis.setPixelColor(0, 0);
 }
 
 
 
 // floating point map
 float ofMap(float value, float inputMin, float inputMax, float outputMin, float outputMax, bool clamp) {
-  float outVal = ((value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
+    float outVal = ((value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
 
-  if (clamp) {
-    if (outputMax < outputMin) {
-      if (outVal < outputMax)  outVal = outputMax;
-      else if (outVal > outputMin)  outVal = outputMin;
-    } else {
-      if (outVal > outputMax) outVal = outputMax;
-      else if (outVal < outputMin)  outVal = outputMin;
+    if (clamp) {
+      if (outputMax < outputMin) {
+        if (outVal < outputMax)  outVal = outputMax;
+        else if (outVal > outputMin)  outVal = outputMin;
+      } else {
+        if (outVal > outputMax) outVal = outputMax;
+        else if (outVal < outputMin)  outVal = outputMin;
+      }
     }
-  }
-  return outVal;
+    return outVal;
 
 }

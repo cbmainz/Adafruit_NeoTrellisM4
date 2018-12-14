@@ -1,13 +1,14 @@
 
 //misc//////////////////////////
 #define OCTAVE           3   //determines note pitch
-#define BPM            300   //increase for faster tempo
-#define MIDI_OUT      false  //enables MIDI output & disables synth
-#define MIDI_CHANNEL     0   // default channel # is 0
-#define SYNTH_SCALE      lydian_scale    // see below, dorian, ionian, etc!
+#define BPM            320  //increase for faster tempo
+#define MIDI_OUT      true  //enables MIDI output & disables synth
+#define MIDI_CHANNEL     1   // default channel # is 0
+#define SYNTH_SCALE      dorian_scale    // see below, dorian, ionian, etc!
 //choose a CC number to control with x axis tilting of the board. 1 is mod wheel, for example.
-#define MIDI_XCC         1     
-#define ARPEGGIATOR_PATTERN circle_arp // see below, many shapes to choose from!
+#define MIDI_XCC         41     
+#define ARPEGGIATOR_PATTERN jump_arp // see below, many shapes to choose from!
+#define BRIGHTNESS       32
 
 //colors//////////////////////////
 uint32_t white =   0xFFFFFF;
@@ -18,8 +19,8 @@ uint32_t teal =    0x00FFFF;
 uint32_t magenta = 0xFF00FF;
 uint32_t yellow =  0xFFFF00;
 uint32_t off =     0x000000;
-uint32_t offColor = blue;   //color of deactivated buttons
-uint32_t onColor = magenta; //color of activated buttons
+uint32_t offColor = off;   //color of deactivated buttons
+uint32_t onColor = red; //color of activated buttons
 
 
 //waveform//////////////////////////
@@ -92,4 +93,41 @@ int8_t tshape_arp[6][2] = { //T-shape
   {  2,  -1 },
   {  2,  0 },
   {  2,  1 },
+};
+
+
+int8_t effiks_arp[6][2] = { // effiks
+  {  0,  0 },
+  {  1,  1 },
+  {  2,  2 },
+  {  0,  0 },
+  {  1,  -1 },
+  {  2,  -2 },
+};
+
+int8_t backandforth_arp[6][2] = { // back and forth
+  {  0,  0 },
+  {  1,  0 },
+  {  2,  0 },
+  {  3,  0 },
+  {  2,  0 },
+  {  1,  0 },
+};
+
+int8_t double_arp[6][2] = { // double
+  {  0,  0 },
+  {  0,  0 },
+  {  1,  0 },
+  {  1,  0 },
+  {  -1,  0 },
+  {  -1,  0 },
+};
+
+int8_t jump_arp[6][2] = { // jump
+  {  0,  0 },
+  {  2,  1 },
+  {  4,  0 },
+  {  6,  1 },
+  {  8,  0 },
+  {  2,  0 },
 };
