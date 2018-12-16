@@ -267,7 +267,7 @@ void playNoteForButton(uint8_t buttonIndex) {
     noteOn(findNoteFromIndex(buttonIndex), buttonIndex);
   }
   // trellis.setPixelColor(buttonIndex, onColor);
-  trellis.setPixelColor(buttonIndex, Wheel((buttonIndex % 12)*(255/12)));
+  trellis.setPixelColor(buttonIndex, Wheel((buttonIndex % 8)*(255/8)));
 }
 
 
