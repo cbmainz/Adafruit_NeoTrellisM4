@@ -1,12 +1,13 @@
 
 //misc//////////////////////////
-#define OCTAVE           3   //determines note pitch
-#define BPM            320  //increase for faster tempo
+#define OCTAVE           3  //determines note pitch
+#define BPM            300  //increase for faster tempo
 #define MIDI_OUT      true  //enables MIDI output & disables synth
-#define MIDI_CHANNEL     1   // default channel # is 0
+#define MIDI_CHANNEL     1  // default channel # is 1
 #define SYNTH_SCALE      dorian_scale    // see below, dorian, ionian, etc!
+#define CLOCK_DIVISION   6 // 24 = quarter note, 12 = eighth notes, 6 = sixteenth notes, 8 = eight note triplets
 //choose a CC number to control with x axis tilting of the board. 1 is mod wheel, for example.
-#define MIDI_XCC         41     
+#define MIDI_XCC         41 // VolcaFM Velocity
 #define ARPEGGIATOR_PATTERN jump_arp // see below, many shapes to choose from!
 #define BRIGHTNESS       32
 

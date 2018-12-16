@@ -2,7 +2,10 @@
     by Collin Cunningham for Adafruit Industries, inspired by Stretta's Polygome
     https://www.adafruit.com/product/3938
 
-    Change color, scale, pattern, bpm, and waveform variables in settings.h file!
+    Change color, scale, pattern, clock division/bpm, and waveform variables in settings.h file!
+
+    Midi USB Clock Sync by cbmainz
+    Sync to Midi clock if there is on
 
 */
 
@@ -10,10 +13,6 @@
 #include <Adafruit_NeoTrellisM4.h>
 
 #include "settings.h"
-
-//Pulse per quarter note. Each beat has 24 pulses.
-//Tempo is based on software inner BPM.
-int ppqn = 0;
 
 #define WIDTH      8
 #define HEIGHT     4
@@ -33,9 +32,11 @@ uint8_t pitchMap[N_BUTTONS];
 uint8_t arpSeqIndex[N_BUTTONS] = {NULL_INDEX};   // Current place in button arpeggio sequence
 uint8_t arpButtonIndex[N_BUTTONS] = {NULL_INDEX};   // Button index being played for each actual pressed button
 
-//unsigned long beatInterval = 60000L / BPM; // ms/beat - should be merged w bpm in a function!
-unsigned long beatInterval = 0L;
+unsigned long beatInterval = 60000L / BPM; // ms/beat - should be merged w bpm in a function!
 unsigned long prevArpTime  = 0L;
+
+//Pulse per quarter note. Each beat has 24 pulses.
+int ppqn = 0;
 
 int last_xbend = 0;
 int last_ybend = 0;
@@ -73,6 +74,7 @@ void setup() {
 
 void loop() {
   trellis.tick();
+  midiEventPacket_t rx;
 
   unsigned long t = millis();
   unsigned long tDiff = t - prevReadTime;
@@ -89,29 +91,29 @@ void loop() {
     }
   }
 
-  //INTERNAL CLOCK
-//  if ((t - prevArpTime) >= beatInterval) {
-//    respondToPresses();
-//    prevArpTime = t;
-//  }
-
-  midiEventPacket_t rx;
-  
+  // CLOCK
   do {
     rx = MidiUSB.read();
 
-    //Count pulses and send note 
+    // External CLOCK (via Midi USB)
     if(rx.byte1 == 0xF8){
        ++ppqn;
        
-       if(ppqn == 12){
+       if(ppqn == CLOCK_DIVISION){
           respondToPresses();
           MidiUSB.flush();
           ppqn = 0;
           prevArpTime = t;
        };
     }
-    
+    // INTERNAL CLOCK
+    else {
+       if ((t - prevArpTime) >= beatInterval) {
+          respondToPresses();
+          ppqn = 0;
+          prevArpTime = t;
+      }
+    }
   } while (rx.header != 0);
 
   // Check for accelerometer
