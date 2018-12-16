@@ -4,8 +4,10 @@
 
     Change color, scale, pattern, clock division/bpm, and waveform variables in settings.h file!
 
-    Midi USB Clock Sync by cbmainz
+    Midi USB Clock Sync by @cbmainz
     Sync to Midi clock if there is on
+
+    'chroma' coloring by @tapiralec
 
 */
 
@@ -264,7 +266,8 @@ void playNoteForButton(uint8_t buttonIndex) {
   else {
     noteOn(findNoteFromIndex(buttonIndex), buttonIndex);
   }
-  trellis.setPixelColor(buttonIndex, onColor);
+  // trellis.setPixelColor(buttonIndex, onColor);
+  trellis.setPixelColor(buttonIndex, Wheel((buttonIndex % 12)*(255/12)));
 }
 
 
@@ -304,4 +307,19 @@ float ofMap(float value, float inputMin, float inputMax, float outputMin, float 
   }
   return outVal;
 
+}
+
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return trellis.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return trellis.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return trellis.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
