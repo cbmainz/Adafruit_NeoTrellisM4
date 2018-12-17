@@ -65,6 +65,8 @@ void setup() {
 
   audioSetup(); //comment out this line for serial debugging
 
+  trellis.fill(green);
+  delay(500); 
   trellis.fill(offColor);
 
   if (!accel.begin()) {
