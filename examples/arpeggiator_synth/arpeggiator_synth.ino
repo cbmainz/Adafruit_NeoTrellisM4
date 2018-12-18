@@ -1,15 +1,15 @@
 /* Arpeggiator Synth for Adafruit Neotrellis M4
-    by Collin Cunningham for Adafruit Industries, inspired by Stretta's Polygome
-    https://www.adafruit.com/product/3938
-
-    Change color, scale, pattern, clock division/bpm, and waveform variables in settings.h file!
-
-    Midi USB Clock Sync by @cbmainz
-    Sync to Midi clock if there is on
-
-    'chroma' coloring by @tapiralec
-
-*/
+ *  by Collin Cunningham for Adafruit Industries, inspired by Stretta's Polygome
+ *  https://www.adafruit.com/product/3938
+ * 
+ *  Change color, scale, pattern, bpm, and waveform variables in settings.h file!
+ * 
+ *  Midi USB Clock Sync by @cbmainz    
+ *  Sync to Midi clock if there is on
+ *      
+ *  'chroma' coloring by @tapiralec
+ *  
+ */
 
 #include <Adafruit_ADXL343.h>
 #include <Adafruit_NeoTrellisM4.h>
@@ -24,8 +24,8 @@
 #define NULL_INDEX      255
 
 unsigned long prevReadTime = 0L; // Keypad polling timer
-uint8_t       quantDiv = 8;      // Quantization division, 2 = half note
-uint8_t       clockPulse = 0;
+//uint8_t       quantDiv = 8;      // Quantization division, 2 = half note
+//uint8_t       clockPulse = 0;
 
 //#define QUANT_PULSE (96/quantDiv)// Number of pulses per quantization division  
 
@@ -36,6 +36,7 @@ uint8_t arpButtonIndex[N_BUTTONS] = {NULL_INDEX};   // Button index being played
 
 unsigned long beatInterval = 60000L / BPM; // ms/beat - should be merged w bpm in a function!
 unsigned long prevArpTime  = 0L;
+boolean holdActive = false;
 
 //Pulse per quarter note. Each beat has 24 pulses.
 int ppqn = 0;
@@ -83,16 +84,31 @@ void loop() {
   unsigned long t = millis();
   unsigned long tDiff = t - prevReadTime;
 
-  while (trellis.available()) {
+  while (trellis.available()){
     keypadEvent e = trellis.read();
     uint8_t i = e.bit.KEY;
     if (e.bit.EVENT == KEY_JUST_PRESSED) {
-      pressed[i] = true;
+      
+      if (!HOLD_ENABLED){         //Normal mode
+        pressed[i] = true;
+      }
+      else {                       //Hold/toggle mode 
+        if (pressed[i] == true){  //if button is active, deactivate
+          pressed[i] = false;     
+          stopArp(i);
+        }
+        else { 
+          pressed[i] = true;   //if button is inactive, activate
+        }
+      }
     }
+    
     else if (e.bit.EVENT == KEY_JUST_RELEASED) {
-      pressed[i] = false;
-      stopArp(i);
-    }
+        if (!HOLD_ENABLED){       //Normal mode, responds to button release
+          pressed[i] = false;
+          stopArp(i);
+        }
+      }
   }
 
   // CLOCK
@@ -178,8 +194,8 @@ void loop() {
 
 void writePitchMap() {
   for (int i = 0; i < N_BUTTONS; i++) {
-    int octMod = i / 8 + OCTAVE;
-    pitchMap[i] = SYNTH_SCALE[i % 8] + (octMod * 12);
+    int octMod = i/8 + OCTAVE;
+    pitchMap[i] = SYNTH_SCALE[i%8] + (octMod*12);
   }
 
 }
@@ -209,6 +225,10 @@ void playArp(uint8_t buttonIndex) {
   y = buttonIndex / WIDTH;
   x = buttonIndex - (y * WIDTH);
 
+  // Reference to root button for Hold mode
+  uint8_t rootY = y;
+  uint8_t rootX = x;
+
   // Add note offsets
   x = x + ARPEGGIATOR_PATTERN[seqIndex][0];
   y = y + ARPEGGIATOR_PATTERN[seqIndex][1];
@@ -231,15 +251,21 @@ void playArp(uint8_t buttonIndex) {
   // Play new note
   playNoteForButton(seqButtonIndex);
 
+  // If in Hold mode, light root button
+  if (HOLD_ENABLED) trellis.setPixelColor(indexFromXY(rootX, rootY), holdColor);
+
 }
 
 
 void stopArp(uint8_t button) {
-  //stop playing the note
+  //Stop playing the note
   stopNoteForButton(arpButtonIndex[button]);
 
-  //store an invalid button index in its place
+  //Store an invalid button index in its place
   arpSeqIndex[button] = NULL_INDEX;  //check for invalid
+
+  // If in Hold mode, light root button
+  if (HOLD_ENABLED) trellis.setPixelColor(button, offColor);
 
 }
 

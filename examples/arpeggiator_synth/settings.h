@@ -9,7 +9,8 @@
 //choose a CC number to control with x axis tilting of the board. 1 is mod wheel, for example.
 #define MIDI_XCC         41 // VolcaFM Velocity
 #define ARPEGGIATOR_PATTERN jump_arp // see below, many shapes to choose from!
-#define BRIGHTNESS       32
+#define HOLD_ENABLED     1  // Buttons are toggled on & off instead of only on while pressed, O = off, 1 = on
+#define BRIGHTNESS       32 // Brightness 0-255
 
 //colors//////////////////////////
 uint32_t white =   0xFFFFFF;
@@ -22,6 +23,7 @@ uint32_t yellow =  0xFFFF00;
 uint32_t off =     0x000000;
 uint32_t offColor = off;   //color of deactivated buttons
 uint32_t onColor = red; //color of activated buttons
+uint32_t holdColor = white; //color for toggled buttons in Hold mode
 
 
 //waveform//////////////////////////
