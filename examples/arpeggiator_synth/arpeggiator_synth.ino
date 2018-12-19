@@ -1,14 +1,14 @@
 /* Arpeggiator Synth for Adafruit Neotrellis M4
  *  by Collin Cunningham for Adafruit Industries, inspired by Stretta's Polygome
  *  https://www.adafruit.com/product/3938
- * 
+ *
  *  Change color, scale, pattern, bpm, and waveform variables in settings.h file!
- * 
- *  Midi USB Clock Sync by @cbmainz    
+ *
+ *  Midi USB Clock Sync by @cbmainz
  *  Sync to Midi clock if there is on
- *      
+ *
  *  'chroma' coloring by @tapiralec
- *  
+ *
  */
 
 #include <Adafruit_ADXL343.h>
@@ -27,7 +27,7 @@ unsigned long prevReadTime = 0L; // Keypad polling timer
 //uint8_t       quantDiv = 8;      // Quantization division, 2 = half note
 //uint8_t       clockPulse = 0;
 
-//#define QUANT_PULSE (96/quantDiv)// Number of pulses per quantization division  
+//#define QUANT_PULSE (96/quantDiv)// Number of pulses per quantization division
 
 boolean pressed[N_BUTTONS] = {false};        // Pressed state for each button
 uint8_t pitchMap[N_BUTTONS];
@@ -67,7 +67,7 @@ void setup() {
   audioSetup(); //comment out this line for serial debugging
 
   trellis.fill(green);
-  delay(500); 
+  delay(500);
   trellis.fill(offColor);
 
   if (!accel.begin()) {
@@ -88,21 +88,21 @@ void loop() {
     keypadEvent e = trellis.read();
     uint8_t i = e.bit.KEY;
     if (e.bit.EVENT == KEY_JUST_PRESSED) {
-      
+
       if (!HOLD_ENABLED){         //Normal mode
         pressed[i] = true;
       }
-      else {                       //Hold/toggle mode 
+      else {                       //Hold/toggle mode
         if (pressed[i] == true){  //if button is active, deactivate
-          pressed[i] = false;     
+          pressed[i] = false;
           stopArp(i);
         }
-        else { 
+        else {
           pressed[i] = true;   //if button is inactive, activate
         }
       }
     }
-    
+
     else if (e.bit.EVENT == KEY_JUST_RELEASED) {
         if (!HOLD_ENABLED){       //Normal mode, responds to button release
           pressed[i] = false;
@@ -118,7 +118,7 @@ void loop() {
     // External CLOCK (via Midi USB)
     if(rx.byte1 == 0xF8){
        ++ppqn;
-       
+
        if(ppqn == CLOCK_DIVISION){
           respondToPresses();
           MidiUSB.flush();
@@ -256,12 +256,11 @@ void playArp(uint8_t buttonIndex) {
 
 }
 
-
 void stopArp(uint8_t button) {
-  //Stop playing the note
+  // Stop playing the note
   stopNoteForButton(arpButtonIndex[button]);
 
-  //Store an invalid button index in its place
+  // Store an invalid button index in its place
   arpSeqIndex[button] = NULL_INDEX;  //check for invalid
 
   // If in Hold mode, light root button

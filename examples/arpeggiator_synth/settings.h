@@ -7,10 +7,9 @@
 #define SYNTH_SCALE      dorian_scale    // see below, dorian, ionian, etc!
 #define CLOCK_DIVISION   6 // 24 = quarter note, 12 = eighth notes, 6 = sixteenth notes, 8 = eight note triplets
 //choose a CC number to control with x axis tilting of the board. 1 is mod wheel, for example.
-#define MIDI_XCC         41 // VolcaFM Velocity
-#define ARPEGGIATOR_PATTERN jump_arp // see below, many shapes to choose from!
-#define HOLD_ENABLED     1  // Buttons are toggled on & off instead of only on while pressed, O = off, 1 = on
-#define BRIGHTNESS       32 // Brightness 0-255
+#define MIDI_XCC         1
+#define ARPEGGIATOR_PATTERN circle_arp // see below, many shapes to choose from!
+#define HOLD_ENABLED     0  //Buttons are toggled on & off instead of only on while pressed, O = off, 1 = on
 
 //colors//////////////////////////
 uint32_t white =   0xFFFFFF;
@@ -21,10 +20,9 @@ uint32_t teal =    0x00FFFF;
 uint32_t magenta = 0xFF00FF;
 uint32_t yellow =  0xFFFF00;
 uint32_t off =     0x000000;
-uint32_t offColor = off;   //color of deactivated buttons
-uint32_t onColor = red; //color of activated buttons
+uint32_t offColor = blue;   //color of deactivated buttons
+uint32_t onColor = magenta; //color of activated buttons
 uint32_t holdColor = white; //color for toggled buttons in Hold mode
-
 
 //waveform//////////////////////////
 int wave = 0;  // 0=sine, 1= square, 2= sawtooth, 3 = triangle
@@ -38,7 +36,6 @@ uint8_t lydian_scale[] = { 0, 2, 4, 6, 7, 9, 10, 11 };  //lydian
 uint8_t mixolydian_scale[] = { 0, 2, 4, 5, 7, 9, 10, 12 }; //mixolydian
 uint8_t aeolian_scale[] = { 0, 2, 3, 5, 7, 8, 10, 12 }; //aeolian
 uint8_t locrian_scale[] = { 0, 1, 3, 5, 6, 8, 10, 12 }; //locrian
-
 
 //pattern//////////////////////////
 
