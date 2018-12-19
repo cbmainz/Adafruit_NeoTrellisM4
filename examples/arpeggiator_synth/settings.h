@@ -10,6 +10,7 @@
 #define MIDI_XCC         1
 #define ARPEGGIATOR_PATTERN circle_arp // see below, many shapes to choose from!
 #define HOLD_ENABLED     0  //Buttons are toggled on & off instead of only on while pressed, O = off, 1 = on
+#define BRIGHTNESS      32  // set Brightness of Neopixels
 
 //colors//////////////////////////
 uint32_t white =   0xFFFFFF;
