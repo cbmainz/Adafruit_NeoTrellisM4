@@ -1,16 +1,16 @@
 
 //misc//////////////////////////
-#define OCTAVE           3  //determines note pitch
-#define BPM            300  //increase for faster tempo
-#define MIDI_OUT      true  //enables MIDI output & disables synth
-#define MIDI_CHANNEL     1  // default channel # is 1
-#define SYNTH_SCALE      dorian_scale    // see below, dorian, ionian, etc!
-#define CLOCK_DIVISION   6 // 24 = quarter note, 12 = eighth notes, 6 = sixteenth notes, 8 = eight note triplets
+#define OCTAVE           2  // determines note pitch
+#define BPM             30  // increase for faster tempo
+#define MIDI_OUT      true  // enables MIDI output & disables synth
+#define MIDI_CHANNEL     0  // default channel (0-15) # is 0
+#define SYNTH_SCALE      locrian_scale    // see below, dorian, ionian, etc!
+#define CLOCK_DIVISION   12  // 24 = quarter note, 12 = eighth notes, 6 = sixteenth notes, 8 = eight note triplets
 //choose a CC number to control with x axis tilting of the board. 1 is mod wheel, for example.
 #define MIDI_XCC         1
-#define ARPEGGIATOR_PATTERN circle_arp // see below, many shapes to choose from!
-#define HOLD_ENABLED     0  //Buttons are toggled on & off instead of only on while pressed, O = off, 1 = on
-#define BRIGHTNESS      32  // set Brightness of Neopixels
+#define ARPEGGIATOR_PATTERN kit_arp // see below, many shapes to choose from!
+#define HOLD_ENABLED     1  // Buttons are toggled on & off instead of only on while pressed, O = off, 1 = on
+#define BRIGHTNESS      32  // set Brightness of Neopixels (0-225)
 
 //colors//////////////////////////
 uint32_t white =   0xFFFFFF;
@@ -21,7 +21,7 @@ uint32_t teal =    0x00FFFF;
 uint32_t magenta = 0xFF00FF;
 uint32_t yellow =  0xFFFF00;
 uint32_t off =     0x000000;
-uint32_t offColor = blue;   //color of deactivated buttons
+uint32_t offColor = off;   //color of deactivated buttons
 uint32_t onColor = magenta; //color of activated buttons
 uint32_t holdColor = white; //color for toggled buttons in Hold mode
 
@@ -131,4 +131,13 @@ int8_t jump_arp[6][2] = { // jump
   {  6,  1 },
   {  8,  0 },
   {  2,  0 },
+};
+
+int8_t kit_arp[6][2] = { // kit
+  {  0,  0 },
+  {  2,  0 },
+  {  4,  0 },
+  {  6,  0 },
+  {  8,  0 },
+  {  10,  0 },
 };

@@ -1,4 +1,4 @@
-/* Arpeggiator Synth for Adafruit Neotrellis M4
+/*    Arpeggiator Synth for Adafruit Neotrellis M4
  *  by Collin Cunningham for Adafruit Industries, inspired by Stretta's Polygome
  *  https://www.adafruit.com/product/3938
  *
@@ -197,7 +197,7 @@ void writePitchMap() {
     int octMod = i/8 + OCTAVE;
     pitchMap[i] = SYNTH_SCALE[i%8] + (octMod*12);
   }
-
+  
 }
 
 void respondToPresses() {
