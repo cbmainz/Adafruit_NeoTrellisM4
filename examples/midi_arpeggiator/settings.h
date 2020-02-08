@@ -1,7 +1,7 @@
 
 //misc//////////////////////////
 #define OCTAVE           2  // determines note pitch
-#define BPM              30  // set tempo if no midi sync possible 
+#define BPM              120  // set tempo if no midi sync possible 
 #define MIDI_CHANNEL     0  // default channel (0-15) # is 0
 #define SYNTH_SCALE      mixolydian_scale    // see below, dorian, ionian, etc!
 #define CLOCK_DIVISION   12  // 24 = quarter note, 12 = eighth notes, 6 = sixteenth notes, 8 = eight note triplets
