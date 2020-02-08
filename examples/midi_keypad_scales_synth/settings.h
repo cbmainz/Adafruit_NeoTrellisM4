@@ -20,6 +20,10 @@ uint32_t off =     0x000000;
 uint32_t offColor = off;   //color of deactivated buttons
 uint32_t onColor = magenta; //color of activated buttons
 
+//waveform//////////////////////////
+int wave = 0;  // 0=sine, 1= square, 2= sawtooth, 3 = triangle
+
+
 // Musical modes / scales
 uint8_t dorian_scale[] = { 0, 2, 3, 5, 7, 9, 10, 12 }; //dorian
 uint8_t ionian_scale[] = { 0, 2, 4, 5, 7, 9, 11, 12 };  //ionian

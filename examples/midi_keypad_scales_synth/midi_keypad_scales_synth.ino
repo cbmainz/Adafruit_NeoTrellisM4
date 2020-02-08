@@ -45,6 +45,8 @@ void setup() {
   //Set up the notes for grid
   writePitchMap();
 
+  audioSetup(); //comment out this line for serial debugging
+
   trellis.fill(green);
   delay(500);
   trellis.fill(offColor);
@@ -156,13 +158,26 @@ uint8_t findNoteFromIndex(uint8_t buttonIndex) {
 
 
 void playNoteForButton(uint8_t buttonIndex) {
-  trellis.noteOn(findNoteFromIndex(buttonIndex), 100);
+  if (MIDI_OUT) {
+    trellis.noteOn(findNoteFromIndex(buttonIndex), 100);
+  }
+  else {
+    noteOn(findNoteFromIndex(buttonIndex), buttonIndex);
+  }
   // trellis.setPixelColor(buttonIndex, onColor);
   trellis.setPixelColor(buttonIndex, Wheel((buttonIndex % 8)*(255/8)));
 }
 
+
 void stopNoteForButton(uint8_t buttonIndex) {
-  trellis.noteOff(findNoteFromIndex(buttonIndex), 0);
+
+  if (MIDI_OUT) {
+    trellis.noteOff(findNoteFromIndex(buttonIndex), 0);
+  }
+  else {
+    noteOff(findNoteFromIndex(buttonIndex), buttonIndex);
+  }
+
   trellis.setPixelColor(buttonIndex, offColor);
 }
 
